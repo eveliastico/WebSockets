@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
-  <head>
-    <title>Socket.IO chat</title>
+<head>
+    <title>Chat</title>
     <style>
       body { margin: 0; padding-bottom: 3rem; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; }
 
@@ -14,11 +14,70 @@
       #messages > li { padding: 0.5rem 1rem; }
       #messages > li:nth-child(odd) { background: #efefef; }
     </style>
-  </head>
-  <body>
-    <ul id="messages"></ul>
-    <form id="form" action="">
-      <input id="input" autocomplete="off" /><button>Send</button>
-    </form>
-  </body>
+    
+</head>
+<body>
+    <div id="username-section">
+        <input id="username" placeholder="Ingresa tu nombre" autocomplete="off" />
+        <button id="set-username">Entrar al chat</button>
+    </div>
+    <div id="chat-section" style="display: none;">
+        <ul id="messages"></ul>
+        <form id="form" action="">
+            <input id="input" autocomplete="off" /><button>Enviar</button>
+        </form>
+    </div>
+    <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
+    <script>
+        const socket = io();
+
+        const usernameSection = document.getElementById('username-section');
+        const chatSection = document.getElementById('chat-section');
+        const usernameInput = document.getElementById('username');
+        const setUsernameButton = document.getElementById('set-username');
+        const form = document.getElementById('form');
+        const input = document.getElementById('input');
+        const messages = document.getElementById('messages');
+
+        // Aqui se configura el nombre del usuario
+        setUsernameButton.addEventListener('click', () => {
+            const username = usernameInput.value.trim();
+            if (username) {
+                socket.emit('set username', username);
+                usernameSection.style.display = 'none';
+                chatSection.style.display = 'block';
+            }
+        });
+
+        
+        form.addEventListener('submit', (e) => {
+            e.preventDefault();
+            if (input.value) {
+                socket.emit('chat message', input.value);
+                input.value = '';
+            }
+        });
+
+        socket.on('chat message', (data) => {
+            const item = document.createElement('li');
+            item.textContent = `${data.username}: ${data.message}`;
+            messages.appendChild(item);
+            window.scrollTo(0, document.body.scrollHeight);
+        });
+
+        socket.on('user connected', (msg) => {
+            const item = document.createElement('li');
+            item.textContent = msg;
+            item.style.fontStyle = 'italic';
+            messages.appendChild(item);
+        });
+
+        socket.on('user disconnected', (msg) => {
+            const item = document.createElement('li');
+            item.textContent = msg;
+            item.style.fontStyle = 'italic';
+            messages.appendChild(item);
+        });
+    </script>
+</body>
 </html>
